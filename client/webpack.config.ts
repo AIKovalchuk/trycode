@@ -2,6 +2,7 @@ import path from 'path'
 import webpack from 'webpack'
 import * as webpackDevServer from 'webpack-dev-server'
 import { CleanWebpackPlugin } from 'clean-webpack-plugin'
+import HtmlWebpackPlugin from 'html-webpack-plugin'
 
 const isDev: boolean = process.env.NODE_ENV === 'development'
 
@@ -43,15 +44,21 @@ const config: webpack.Configuration = {
         alias: {},
     },
     output: {
-        path: path.resolve(__dirname, 'build'),
+        path: path.resolve(__dirname, './build'),
         filename: filename('js'),
     },
     devServer: {
-        contentBase: path.join(__dirname, 'build'),
+        contentBase: path.join(__dirname, './build'),
+        compress: true,
+        hot: true,
         port: 8000,
-        hot: isDev,
     },
-    plugins: [new CleanWebpackPlugin()],
+    plugins: [
+        new CleanWebpackPlugin(),
+        new HtmlWebpackPlugin({
+            template: './src/index.html',
+        }),
+    ],
 }
 
 export default config
