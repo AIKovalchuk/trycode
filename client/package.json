@@ -7,12 +7,16 @@
         "build": "webpack --config webpack.config.ts",
         "serve": "webpack serve --mode development"
     },
+    "proxy": "http://localhost:8080",
     "author": "aikovalchuk@ya.ru",
     "license": "ISC",
     "dependencies": {
+        "axios": "^0.21.1",
         "react": "^17.0.1",
         "react-dom": "^17.0.1",
-        "react-router-dom": "^5.2.0"
+        "react-router-dom": "^5.2.0",
+        "socket.io-client": "^3.1.1",
+        "uuid": "^8.3.2"
     },
     "devDependencies": {
         "@babel/core": "^7.12.13",
@@ -24,6 +28,7 @@
         "@types/react": "^17.0.1",
         "@types/react-dom": "^17.0.0",
         "@types/react-router-dom": "^5.1.7",
+        "@types/uuid": "^8.3.0",
         "@types/webpack": "^4.41.26",
         "@types/webpack-dev-server": "^3.11.1",
         "@typescript-eslint/eslint-plugin": "^4.14.2",
