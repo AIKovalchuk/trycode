@@ -1,7 +1,9 @@
 import React from "react";
 import { Link, useRouteMatch } from "react-router-dom";
+import { fromEvent } from "rxjs";
+import { filter, map } from "rxjs/operators";
 import { io, Socket } from "socket.io-client";
-
+import "./session.scss";
 interface MatchParams {
   id: string;
 }
@@ -11,6 +13,8 @@ const Session = () => {
   const [message, setMessage] = React.useState<string>("");
   const id = useRouteMatch<MatchParams>("/session/:id");
   const socket = React.useRef<Socket>();
+  const workbench = React.useRef();
+  const obser = React.useRef();
 
   React.useEffect(() => {
     socket.current = io("http://localhost:8080");
@@ -31,14 +35,30 @@ const Session = () => {
     };
   }, [id?.params.id]);
 
-  const sendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    setMessage("");
+  React.useEffect(() => {
+    const obs = fromEvent<KeyboardEvent>(document, "keydown")
+      .pipe(
+        map((e) => (e.key === "Enter" ? "\n" : e.key)),
+        filter((e) => e.length === 1),
+        map((e) => {
+          sendMessage(e);
+          return e;
+        }),
+        map((e) => setText((t) => t + e))
+      )
+      .subscribe();
+
+    return () => obs.unsubscribe();
+  }, []);
+
+  const sendMessage = (e: string) => {
+    // e.preventDefault();
+    // setMessage("");
 
     socket.current?.emit("send-message", {
       username: "Anonymous",
       session: id?.params.id,
-      message,
+      message: e,
     });
   };
 
@@ -48,16 +68,15 @@ const Session = () => {
   return (
     <div>
       <h1>It is session</h1>
-      <div>Text: {text}</div>
-      <form onSubmit={sendMessage}>
+      <div className="workbench">{text}</div>
+      {/* <form onSubmit={sendMessage}>
         <textarea
           value={message}
           onChange={handleChange}
           placeholder="type here"
         />
         <input type="submit" className="btn" value="q" />
-      </form>
-      <button>Start</button>
+      </form> */}
       <Link to="/">Back</Link>
     </div>
   );

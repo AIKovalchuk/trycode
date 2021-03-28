@@ -59,7 +59,7 @@ io.on("connect", (socket: Socket) => {
         );
         const idSession = sessions.findIndex((val) => val.id === session);
         sessions[idSession].text += message;
-        io.to(session).emit("new-message", message);
+        socket.to(session).emit("new-message", message);
     });
 
     socket.on("disconnect", () => {
