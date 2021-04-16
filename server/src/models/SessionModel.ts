@@ -1,0 +1,3 @@
+const sessions = [];
+
+const createSession = () => {};

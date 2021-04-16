@@ -3,6 +3,8 @@ import http from "http";
 import { Server, Socket } from "socket.io";
 import cors from "cors";
 import { v4 as uuidv4 } from "uuid";
+import SessionRouter from "./routes/session";
+import Session from "./services/Session";
 
 const app = express();
 const server = new http.Server(app);
@@ -15,51 +17,35 @@ const PORT = 8080;
 
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
-// interface Users {
-//     [key: string]: string
-// }
-
-interface User {
-    nickname: string | null;
-}
-interface Session {
-    id: string;
-    users: number[];
-    text: string;
-}
-
-const users: User[] = [];
-const sessions: Session[] = [];
-
-app.post("/api/session/create", (req, res) => {
-    const id = uuidv4();
-    const session: Session = {
-        id,
-        users: [],
-        text: "",
-    };
-    sessions.push(session);
-    res.send({ id });
-});
+app.use("/api", SessionRouter);
 
 io.on("connect", (socket: Socket) => {
     console.log("New connection");
 
-    socket.on("join-room", ({ username, session }) => {
-        console.log("join-room", username, session);
-        socket.join(session);
-        socket.to(session).emit(`${username} has been joined on session`);
-        const text = sessions.find((s) => s.id === session)?.text || "";
-        socket.emit("new-message", text);
+    socket.on("join-room", async ({ username, sessionId }) => {
+        try {
+            const session = await Session.getSessionById(sessionId);
+
+            if (!session) {
+                return;
+            }
+
+            console.log("join-room", username, session.id);
+            socket.join(session.id);
+            socket
+                .to(session.id)
+                .emit(`${username} has been joined on session`);
+            const text = session.text;
+            socket.emit("new-message", text);
+        } catch (error) {}
     });
 
-    socket.on("send-message", ({ username, session, message }) => {
+    socket.on("send-message", async ({ username, sessionId, message }) => {
         console.log(
-            `New message in room ${session} from ${username}: ${message}`
+            `New message in room ${sessionId} from ${username}: ${message}`
         );
-        const idSession = sessions.findIndex((val) => val.id === session);
-        sessions[idSession].text += message;
-        socket.to(session).emit("new-message", message);
+        Session.addTextToSession(sessionId, message);
+        socket.to(sessionId).emit("new-message", message);
     });
 
     socket.on("disconnect", () => {

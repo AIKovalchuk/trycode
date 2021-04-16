@@ -3,6 +3,7 @@ import { Link, useRouteMatch } from "react-router-dom";
 import { fromEvent } from "rxjs";
 import { filter, map } from "rxjs/operators";
 import { io, Socket } from "socket.io-client";
+import Edditor from "../../components/Edditor";
 import "./session.scss";
 interface MatchParams {
   id: string;
@@ -35,21 +36,21 @@ const Session = () => {
     };
   }, [id?.params.id]);
 
-  React.useEffect(() => {
-    const obs = fromEvent<KeyboardEvent>(document, "keydown")
-      .pipe(
-        map((e) => (e.key === "Enter" ? "\n" : e.key)),
-        filter((e) => e.length === 1),
-        map((e) => {
-          sendMessage(e);
-          return e;
-        }),
-        map((e) => setText((t) => t + e))
-      )
-      .subscribe();
+  // React.useEffect(() => {
+  //   const obs = fromEvent<KeyboardEvent>(document, "keydown")
+  //     .pipe(
+  //       map((e) => (e.key === "Enter" ? "\n" : e.key)),
+  //       filter((e) => e.length === 1),
+  //       map((e) => {
+  //         sendMessage(e);
+  //         return e;
+  //       }),
+  //       map((e) => setText((t) => t + e))
+  //     )
+  //     .subscribe();
 
-    return () => obs.unsubscribe();
-  }, []);
+  //   return () => obs.unsubscribe();
+  // }, []);
 
   const sendMessage = (e: string) => {
     // e.preventDefault();
@@ -68,15 +69,7 @@ const Session = () => {
   return (
     <div>
       <h1>It is session</h1>
-      <div className="workbench">{text}</div>
-      {/* <form onSubmit={sendMessage}>
-        <textarea
-          value={message}
-          onChange={handleChange}
-          placeholder="type here"
-        />
-        <input type="submit" className="btn" value="q" />
-      </form> */}
+      <Edditor />
       <Link to="/">Back</Link>
     </div>
   );

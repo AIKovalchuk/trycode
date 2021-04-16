@@ -1,3 +1,13 @@
-import { Request, Response, NextFunction } from 'express'
+import { Request, Response } from "express";
+import Session from "../services/Session";
 
-export const createSession = async (req: Request, res: Response, next: NextFunction) => {}
+const createSession = async (req: Request, res: Response) => {
+    try {
+        const session = await Session.createSession();
+        res.send({ id: session.id });
+    } catch (error) {
+        res.status(500);
+    }
+};
+
+export { createSession };
