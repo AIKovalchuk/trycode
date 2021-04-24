@@ -1,21 +1,27 @@
+import { Editor, EditorChange } from "codemirror";
 import React from "react";
-import { useHistory } from "react-router-dom";
-import axios from "axios";
+import "codemirror/lib/codemirror.css";
+import "codemirror/theme/material.css";
+import "codemirror/mode/xml/xml";
+import "codemirror/mode/javascript/javascript";
+import { Controlled as CodeMirror } from "react-codemirror2";
+
+import "./main.scss";
 
 const Main: React.FC = () => {
-  const history = useHistory();
+  const [text, setText] = React.useState<string>("");
 
-  const createSession = (e: React.FormEvent) => {
-    e.preventDefault();
-    axios
-      .get("http://localhost:8080/api/session")
-      .then((res) => history.push("/session/" + res.data.id));
+  const onBeforeChange = (
+    editor: Editor,
+    data: EditorChange,
+    value: string
+  ) => {
+    setText(value);
   };
 
   return (
-    <div>
-      <h1>Welcome to TryCode</h1>
-      <button onClick={createSession}>Create session</button>
+    <div className="editor">
+      <CodeMirror onBeforeChange={onBeforeChange} value={text} />
     </div>
   );
 };

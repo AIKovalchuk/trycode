@@ -1,14 +1,10 @@
 import React from "react";
 import { Route, Switch } from "react-router-dom";
 import Main from "./page/main/main";
-import Session from "./page/session/session";
 
-const Routing = () => {
+const Routing: React.FC = () => {
   return (
     <Switch>
-      <Route path="/session/:sessionId">
-        <Session />
-      </Route>
       <Route path="/">
         <Main />
       </Route>
