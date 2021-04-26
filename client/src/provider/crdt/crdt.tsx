@@ -1,12 +1,14 @@
-import React from "react";
+import React, { Children } from "react";
+import Main from "../../page/main/main";
 import { Char, EditorPosition } from "./interface";
 
 interface CRDTController {
   handleLocalInsert: (value: string[], pos: EditorPosition) => Char;
   handleLocalDelete: (pos: EditorPosition, posEnd: EditorPosition) => void;
   handleRemoteInsert: () => void;
-  handleRemoteDelete: () => void;
+  handleRemoteDelete: (char: Char) => void;
   getText: () => string;
+  text: string;
 }
 
 export const CRDTContext = React.createContext<CRDTController>({
@@ -15,12 +17,14 @@ export const CRDTContext = React.createContext<CRDTController>({
   },
   handleLocalDelete: (pos: EditorPosition, posEnd: EditorPosition) => undefined,
   handleRemoteInsert: () => undefined,
-  handleRemoteDelete: () => undefined,
+  handleRemoteDelete: (char: Char) => undefined,
   getText: () => "",
+  text: "",
 });
 
 const CRDT: React.FC = ({ children }) => {
   const charsRef = React.useRef<Char[][]>([[]]);
+  const [text, setText] = React.useState("");
 
   const findPosBetween = (
     posBefore: number[],
@@ -119,6 +123,7 @@ const CRDT: React.FC = ({ children }) => {
     }
     const char = generateChar(charInsert, pos);
     insertChar(char, pos);
+    updateText();
     return char;
   };
 
@@ -136,14 +141,101 @@ const CRDT: React.FC = ({ children }) => {
       charsRef.current[posStart.line].splice(posStart.ch, 1);
     }
     charsRef.current = charsRef.current.filter((line) => line.length !== 0);
+    updateText();
   };
 
   const handleRemoteInsert = () => {
+    updateText();
     return undefined;
   };
 
-  const handleRemoteDelete = () => {
-    return undefined;
+  const findLine = (char: Char) => {
+    console.log("TEST findLine");
+    const target = char.position[0];
+
+    let leftIndex = 0;
+    let rightIndex = charsRef.current.length - 1;
+
+    while (leftIndex <= rightIndex) {
+      const midLine = Math.floor((rightIndex - leftIndex) / 2) + leftIndex;
+
+      if (
+        charsRef.current[midLine][0].position[0] <= target &&
+        target <=
+          charsRef.current[midLine][charsRef.current[midLine].length - 1]
+            .position[0]
+      ) {
+        return midLine;
+      } else if (charsRef.current[midLine][0].position[0] >= target) {
+        rightIndex = midLine;
+      } else {
+        leftIndex = rightIndex;
+      }
+    }
+    return -1;
+  };
+
+  const findCharInLine = (char: Char, lineId: number) => {
+    console.log("TEST findCharInLine");
+    const line = charsRef.current[lineId];
+
+    let leftIndex = 0;
+    let rightIndex = line.length - 1;
+
+    while (leftIndex <= rightIndex) {
+      console.log("TEST findCharInLine", leftIndex, rightIndex);
+      const midChar = Math.floor((rightIndex - leftIndex) / 2) + leftIndex;
+
+      for (let deep = 0; deep < line[midChar].position.length; deep++) {
+        console.log(
+          "TEST findCharInLine",
+          midChar,
+          deep,
+          line[midChar].position[deep],
+          char.position[deep]
+        );
+        if (line[midChar].position[deep] > char.position[deep]) {
+          rightIndex = midChar;
+        } else if (line[midChar].position[deep] < char.position[deep]) {
+          leftIndex = midChar;
+        } else if (
+          line[midChar].position[deep] === char.position[deep] &&
+          deep === char.position.length - 1
+        ) {
+          return midChar;
+        }
+      }
+    }
+    return -1;
+  };
+
+  const findPosition = (char: Char) => {
+    console.log("TEST findPosition");
+    const line = findLine(char);
+    const ch = findCharInLine(char, line);
+
+    return { line, ch };
+  };
+
+  const handleRemoteDelete = (char: Char) => {
+    const pos = findPosition(char);
+    handleLocalDelete(pos, { line: pos.line, ch: pos.ch + 1 });
+    updateText();
+  };
+
+  React.useEffect(() => {
+    console.log("TEST");
+    setTimeout(() => {
+      console.log("TEST START");
+      const char = charsRef.current[1][2];
+      console.log(char);
+      handleRemoteDelete(char);
+      console.log("TEST END");
+    }, 10000);
+  }, []);
+
+  const updateText = () => {
+    setText((state) => getText());
   };
 
   const getText = () => {
@@ -159,7 +251,8 @@ const CRDT: React.FC = ({ children }) => {
         handleLocalDelete,
         handleRemoteInsert,
         handleRemoteDelete,
-        getText,
+        getText: () => getText(),
+        text,
       }}
     >
       {children}

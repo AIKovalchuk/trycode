@@ -11,9 +11,9 @@ import "./main.scss";
 import { EditorPosition } from "../../provider/crdt/interface";
 
 const Main: React.FC = () => {
-  const [text, setText] = React.useState<string>("");
+  // const [text, setText] = React.useState<string>("");
 
-  const { handleLocalInsert, handleLocalDelete, getText } = React.useContext(
+  const { handleLocalInsert, handleLocalDelete, text } = React.useContext(
     CRDTContext
   );
 
@@ -39,9 +39,9 @@ const Main: React.FC = () => {
       default:
         break;
     }
-    const text$ = getText();
-    console.log(text$);
-    setText(text$);
+    // const text$ = getText();
+    // console.log(text$);
+    // setText(text$);
   };
 
   return (
