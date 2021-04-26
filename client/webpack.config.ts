@@ -55,7 +55,6 @@ const config: webpack.Configuration = {
   },
   devServer: {
     contentBase: path.join(__dirname, "./build"),
-    compress: true,
     hot: true,
     port: 8000,
     historyApiFallback: true,

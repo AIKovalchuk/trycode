@@ -4,6 +4,7 @@ import { fromEvent } from "rxjs";
 import { filter, map } from "rxjs/operators";
 import { io, Socket } from "socket.io-client";
 import Edditor from "../../components/Edditor";
+import CRDT from "../../provider/CRDT";
 import "./session.scss";
 interface MatchParams {
   id: string;
@@ -69,7 +70,9 @@ const Session = () => {
   return (
     <div>
       <h1>It is session</h1>
-      <Edditor />
+      <CRDT>
+        <Edditor />
+      </CRDT>
       <Link to="/">Back</Link>
     </div>
   );
