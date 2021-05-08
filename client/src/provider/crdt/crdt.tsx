@@ -1,30 +1,76 @@
-import React, { Children } from "react";
+import React from "react";
 import Main from "../../page/main/main";
 import { Char, EditorPosition } from "./interface";
+import { io, Socket } from "socket.io-client";
 
 interface CRDTController {
   handleLocalInsert: (value: string[], pos: EditorPosition) => Char;
   handleLocalDelete: (pos: EditorPosition, posEnd: EditorPosition) => void;
-  handleRemoteInsert: () => void;
+  handleRemoteInsert: (char: Char) => void;
   handleRemoteDelete: (char: Char) => void;
-  getText: () => string;
   text: string;
 }
 
 export const CRDTContext = React.createContext<CRDTController>({
-  handleLocalInsert: (value: string[], pos: EditorPosition) => {
+  handleLocalInsert: () => {
     return {} as Char;
   },
-  handleLocalDelete: (pos: EditorPosition, posEnd: EditorPosition) => undefined,
+  handleLocalDelete: () => undefined,
   handleRemoteInsert: () => undefined,
-  handleRemoteDelete: (char: Char) => undefined,
-  getText: () => "",
+  handleRemoteDelete: () => undefined,
   text: "",
 });
 
 const CRDT: React.FC = ({ children }) => {
   const charsRef = React.useRef<Char[][]>([[]]);
   const [text, setText] = React.useState("");
+  const socket = React.useRef<Socket>();
+
+  React.useEffect(() => {
+    socket.current = io("http://localhost:8080");
+
+    socket.current.on("remote-insert", (char: Char) => {
+      console.log("remote-insert", char);
+      handleRemoteInsert(char);
+    });
+
+    socket.current.on("remote-delete", (char: Char) => {
+      console.log("remote-delete", char);
+      handleRemoteDelete(char);
+    });
+
+    return () => {
+      socket.current?.disconnect();
+    };
+  }, []);
+
+  const compareChars = (charA: Char, charB: Char) => {
+    console.log("Compare", charA, charB);
+    const length = Math.min(charA.position.length, charB.position.length);
+    for (let deep = 0; deep < length; deep++) {
+      if (charA.position[deep] > charB.position[deep]) {
+        return 1;
+      } else if (charA.position[deep] < charB.position[deep]) {
+        return -1;
+      } else if (
+        charA.position[deep] === charB.position[deep] &&
+        deep === length - 1 &&
+        length !== Math.max(charA.position.length, charB.position.length)
+      ) {
+        if (charA.position.length < charB.position.length) {
+          return -1;
+        } else {
+          return 1;
+        }
+      } else if (
+        charA.position[deep] === charB.position[deep] &&
+        deep === length - 1
+      ) {
+        return 0;
+      }
+    }
+    return 0;
+  };
 
   const findPosBetween = (
     posBefore: number[],
@@ -124,6 +170,7 @@ const CRDT: React.FC = ({ children }) => {
     const char = generateChar(charInsert, pos);
     insertChar(char, pos);
     updateText();
+    socket.current?.emit("insert-char", char);
     return char;
   };
 
@@ -131,6 +178,7 @@ const CRDT: React.FC = ({ children }) => {
     posStart: EditorPosition,
     posEnd: EditorPosition
   ) => {
+    let char;
     if (posEnd.line !== posStart.line) {
       const chars = charsRef.current[posEnd.line];
       charsRef.current[posStart.line].splice(posStart.ch, 1);
@@ -138,23 +186,37 @@ const CRDT: React.FC = ({ children }) => {
     } else if (posStart.line === 0 && posStart.ch === 0) {
       return;
     } else {
-      charsRef.current[posStart.line].splice(posStart.ch, 1);
+      char = charsRef.current[posStart.line].splice(posStart.ch, 1);
     }
     charsRef.current = charsRef.current.filter((line) => line.length !== 0);
     updateText();
+    socket.current?.emit("delete-char", char);
   };
 
-  const handleRemoteInsert = () => {
+  const findPositionChar = (char: Char) => {
+    const line = findLine(char);
+    const ch = findIndexForChar(char, line);
+
+    return { line, ch } as EditorPosition;
+  };
+
+  const handleRemoteInsert = (char: Char) => {
+    const pos = findPositionChar(char);
+    insertChar(char, pos);
     updateText();
     return undefined;
   };
 
   const findLine = (char: Char) => {
-    console.log("TEST findLine");
+    console.log("TEST findLine", char, charsRef.current);
     const target = char.position[0];
 
     let leftIndex = 0;
     let rightIndex = charsRef.current.length - 1;
+
+    if (charsRef.current.length === 1) {
+      return 0;
+    }
 
     while (leftIndex <= rightIndex) {
       const midLine = Math.floor((rightIndex - leftIndex) / 2) + leftIndex;
@@ -176,7 +238,13 @@ const CRDT: React.FC = ({ children }) => {
   };
 
   const findCharInLine = (char: Char, lineId: number) => {
-    console.log("TEST findCharInLine");
+    console.log(
+      "TEST findCharInLine",
+      char,
+      lineId,
+      charsRef.current,
+      charsRef.current[lineId]
+    );
     const line = charsRef.current[lineId];
 
     let leftIndex = 0;
@@ -209,8 +277,49 @@ const CRDT: React.FC = ({ children }) => {
     return -1;
   };
 
+  const findIndexForChar = (char: Char, lineId: number) => {
+    console.log("TEST findIndexForChar 1", char, lineId);
+    const line = charsRef.current[lineId];
+
+    if (line.length === 0) {
+      return 0;
+    }
+
+    let leftIndex = 0;
+    let rightIndex = line.length - 1;
+
+    if (line.length === 0 || compareChars(char, line[leftIndex]) < 0) {
+      return leftIndex;
+    } else if (compareChars(char, line[rightIndex]) > 0) {
+      return line.length;
+    }
+
+    while (leftIndex <= rightIndex) {
+      console.log("TEST findIndexForChar 2", leftIndex, rightIndex);
+      const midChar = Math.floor((rightIndex - leftIndex) / 2) + leftIndex;
+
+      const res = compareChars(char, line[midChar]);
+      console.log("TEST findIndexForChar 3", res, midChar);
+      if (res === -1) {
+        rightIndex = midChar;
+      } else if (res === 1) {
+        leftIndex = midChar;
+      } else {
+        return midChar;
+      }
+      if (leftIndex === rightIndex) {
+        break;
+      }
+    }
+    console.log(char, line[leftIndex], line, leftIndex, rightIndex);
+    if (compareChars(char, line[leftIndex]) === 0) {
+      return leftIndex;
+    } else {
+      return rightIndex;
+    }
+  };
+
   const findPosition = (char: Char) => {
-    console.log("TEST findPosition");
     const line = findLine(char);
     const ch = findCharInLine(char, line);
 
@@ -223,16 +332,18 @@ const CRDT: React.FC = ({ children }) => {
     updateText();
   };
 
-  React.useEffect(() => {
-    console.log("TEST");
-    setTimeout(() => {
-      console.log("TEST START");
-      const char = charsRef.current[1][2];
-      console.log(char);
-      handleRemoteDelete(char);
-      console.log("TEST END");
-    }, 10000);
-  }, []);
+  // React.useEffect(() => {
+  //   console.log("TEST");
+  //   setTimeout(() => {
+  //     console.log("TEST START");
+  //     const char = charsRef.current[1][2];
+  //     const char2 = { char: "p", position: [9999] } as Char;
+  //     console.log(char);
+  //     // handleRemoteDelete(char);
+  //     handleRemoteInsert(char2);
+  //     console.log("TEST END");
+  //   }, 10000);
+  // }, []);
 
   const updateText = () => {
     setText((state) => getText());
@@ -251,7 +362,6 @@ const CRDT: React.FC = ({ children }) => {
         handleLocalDelete,
         handleRemoteInsert,
         handleRemoteDelete,
-        getText: () => getText(),
         text,
       }}
     >
