@@ -186,7 +186,7 @@ const CRDT: React.FC = ({ children }) => {
     } else if (posStart.line === 0 && posStart.ch === 0) {
       return;
     } else {
-      char = charsRef.current[posStart.line].splice(posStart.ch, 1);
+      char = charsRef.current[posStart.line].splice(posStart.ch, 1)[0];
     }
     charsRef.current = charsRef.current.filter((line) => line.length !== 0);
     updateText();
@@ -251,25 +251,24 @@ const CRDT: React.FC = ({ children }) => {
     let rightIndex = line.length - 1;
 
     while (leftIndex <= rightIndex) {
-      console.log("TEST findCharInLine", leftIndex, rightIndex);
+      console.log("TEST findCharInLine 1", leftIndex, rightIndex);
       const midChar = Math.floor((rightIndex - leftIndex) / 2) + leftIndex;
 
       for (let deep = 0; deep < line[midChar].position.length; deep++) {
         console.log(
-          "TEST findCharInLine",
+          "TEST findCharInLine 2",
           midChar,
           deep,
           line[midChar].position[deep],
           char.position[deep]
         );
-        if (line[midChar].position[deep] > char.position[deep]) {
+        const res = compareChars(char, line[midChar]);
+        console.log("TEST findCharInLine 3", res, midChar);
+        if (res === -1) {
           rightIndex = midChar;
-        } else if (line[midChar].position[deep] < char.position[deep]) {
+        } else if (res === 1) {
           leftIndex = midChar;
-        } else if (
-          line[midChar].position[deep] === char.position[deep] &&
-          deep === char.position.length - 1
-        ) {
+        } else {
           return midChar;
         }
       }
