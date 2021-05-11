@@ -49,8 +49,10 @@ const CRDT: React.FC = ({ children }) => {
     const length = Math.min(charA.position.length, charB.position.length);
     for (let deep = 0; deep < length; deep++) {
       if (charA.position[deep] > charB.position[deep]) {
+        console.log("Compare result", 1);
         return 1;
       } else if (charA.position[deep] < charB.position[deep]) {
+        console.log("Compare result", -1);
         return -1;
       } else if (
         charA.position[deep] === charB.position[deep] &&
@@ -58,17 +60,21 @@ const CRDT: React.FC = ({ children }) => {
         length !== Math.max(charA.position.length, charB.position.length)
       ) {
         if (charA.position.length < charB.position.length) {
+          console.log("Compare result", -1);
           return -1;
         } else {
+          console.log("Compare result", 1);
           return 1;
         }
       } else if (
         charA.position[deep] === charB.position[deep] &&
         deep === length - 1
       ) {
+        console.log("Compare result", 0);
         return 0;
       }
     }
+    console.log("Compare result end", 0);
     return 0;
   };
 
@@ -160,51 +166,11 @@ const CRDT: React.FC = ({ children }) => {
     }
   };
 
-  const handleLocalInsert = (value: string[], pos: EditorPosition) => {
-    let charInsert = value[0];
-    if (value[0] === "" && value[1] === "" && value.length === 2) {
-      charInsert = "\n";
-      // pos.line += 1;
-      // pos.ch = 0;
-    }
-    const char = generateChar(charInsert, pos);
-    insertChar(char, pos);
-    updateText();
-    socket.current?.emit("insert-char", char);
-    return char;
-  };
-
-  const handleLocalDelete = (
-    posStart: EditorPosition,
-    posEnd: EditorPosition
-  ) => {
-    let char;
-    if (posEnd.line !== posStart.line) {
-      const chars = charsRef.current[posEnd.line];
-      charsRef.current[posStart.line].splice(posStart.ch, 1);
-      charsRef.current[posStart.line].concat(chars);
-    } else if (posStart.line === 0 && posStart.ch === 0) {
-      return;
-    } else {
-      char = charsRef.current[posStart.line].splice(posStart.ch, 1)[0];
-    }
-    charsRef.current = charsRef.current.filter((line) => line.length !== 0);
-    updateText();
-    socket.current?.emit("delete-char", char);
-  };
-
   const findPositionChar = (char: Char) => {
     const line = findLine(char);
     const ch = findIndexForChar(char, line);
 
     return { line, ch } as EditorPosition;
-  };
-
-  const handleRemoteInsert = (char: Char) => {
-    const pos = findPositionChar(char);
-    insertChar(char, pos);
-    updateText();
-    return undefined;
   };
 
   const findLine = (char: Char) => {
@@ -325,27 +291,59 @@ const CRDT: React.FC = ({ children }) => {
     return { line, ch };
   };
 
-  const handleRemoteDelete = (char: Char) => {
-    const pos = findPosition(char);
-    handleLocalDelete(pos, { line: pos.line, ch: pos.ch + 1 });
-    updateText();
-  };
-
-  // React.useEffect(() => {
-  //   console.log("TEST");
-  //   setTimeout(() => {
-  //     console.log("TEST START");
-  //     const char = charsRef.current[1][2];
-  //     const char2 = { char: "p", position: [9999] } as Char;
-  //     console.log(char);
-  //     // handleRemoteDelete(char);
-  //     handleRemoteInsert(char2);
-  //     console.log("TEST END");
-  //   }, 10000);
-  // }, []);
-
   const updateText = () => {
     setText((state) => getText());
+  };
+
+  const handleLocalInsert = (value: string[], pos: EditorPosition) => {
+    let charInsert = value[0];
+    if (value[0] === "" && value[1] === "" && value.length === 2) {
+      charInsert = "\n";
+    }
+    const char = generateChar(charInsert, pos);
+    insertChar(char, pos);
+    updateText();
+    socket.current?.emit("insert-char", char);
+    return char;
+  };
+
+  const handleLocalDelete = (
+    posStart: EditorPosition,
+    posEnd: EditorPosition
+  ) => {
+    console.log('handleLocalDelete ', posStart, posEnd)
+    let char;
+    if (posEnd.line !== posStart.line) {
+      const chars = charsRef.current[posEnd.line];
+      charsRef.current[posStart.line].splice(posStart.ch, 1);
+      charsRef.current[posStart.line].concat(chars);
+    } else if (posStart.line === 0 && posStart.ch === 0) {
+      console.log('handleLocalDelete nothing', posStart, posEnd)
+      return;
+    } else {
+      char = charsRef.current[posStart.line].splice(posStart.ch, 1)[0];
+    }
+    console.log('handleLocalDelete delete', char)
+    charsRef.current = charsRef.current.filter((line) => line.length !== 0);
+    updateText();
+    socket.current?.emit("delete-char", char);
+  };
+
+  const handleRemoteInsert = (char: Char) => {
+    console.log('handleRemoteInsert', char)
+    const pos = findPositionChar(char);
+    console.log('handleRemoteInsert pos', pos)
+    insertChar(char, pos);
+    updateText();
+    return undefined;
+  };
+
+  const handleRemoteDelete = (char: Char) => {
+    console.log('handleRemoteDelete', char)
+    const pos = findPosition(char);
+    console.log('handleRemoteDelete pos', pos)
+    handleLocalDelete(pos, { line: pos.line, ch: pos.ch + 1 });
+    updateText();
   };
 
   const getText = () => {
