@@ -13,16 +13,15 @@ import { EditorPosition } from "../../provider/crdt/interface";
 const Main: React.FC = () => {
   // const [text, setText] = React.useState<string>("");
 
-  const { handleLocalInsert, handleLocalDelete, text } = React.useContext(
-    CRDTContext
-  );
+  const { handleLocalInsert, handleLocalDelete, text } =
+    React.useContext(CRDTContext);
 
   const onBeforeChange = (
     editor: Editor,
     data: EditorChange,
     value: string
   ) => {
-    console.log(data, value);
+    console.log("INPUT", "data: ", data, "value: ", value);
     switch (data.origin) {
       case "+input":
         const pos: EditorPosition = { line: data.from.line, ch: data.from.ch };
@@ -39,9 +38,6 @@ const Main: React.FC = () => {
       default:
         break;
     }
-    // const text$ = getText();
-    // console.log(text$);
-    // setText(text$);
   };
 
   return (

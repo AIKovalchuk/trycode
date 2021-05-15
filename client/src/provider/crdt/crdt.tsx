@@ -45,14 +45,11 @@ const CRDT: React.FC = ({ children }) => {
   }, []);
 
   const compareChars = (charA: Char, charB: Char) => {
-    console.log("Compare", charA, charB);
     const length = Math.min(charA.position.length, charB.position.length);
     for (let deep = 0; deep < length; deep++) {
       if (charA.position[deep] > charB.position[deep]) {
-        console.log("Compare result", 1);
         return 1;
       } else if (charA.position[deep] < charB.position[deep]) {
-        console.log("Compare result", -1);
         return -1;
       } else if (
         charA.position[deep] === charB.position[deep] &&
@@ -60,22 +57,23 @@ const CRDT: React.FC = ({ children }) => {
         length !== Math.max(charA.position.length, charB.position.length)
       ) {
         if (charA.position.length < charB.position.length) {
-          console.log("Compare result", -1);
           return -1;
         } else {
-          console.log("Compare result", 1);
           return 1;
         }
       } else if (
         charA.position[deep] === charB.position[deep] &&
         deep === length - 1
       ) {
-        console.log("Compare result", 0);
         return 0;
       }
     }
-    console.log("Compare result end", 0);
     return 0;
+  };
+
+  const generateDigit = (min: number, max: number) => {
+    min += 1;
+    return Math.floor(Math.random() * (max - min)) + min;
   };
 
   const findPosBetween = (
@@ -83,11 +81,12 @@ const CRDT: React.FC = ({ children }) => {
     posAfter: number[],
     newPos: number[] = []
   ): number[] => {
-    const firstInd = posBefore[0] || 0;
-    const secondInd = posAfter[0] || firstInd * 10 + 2;
+    const firstInd = posBefore.length ? posBefore[0] : 0;
+
+    const secondInd = posAfter.length ? posAfter[0] : 32;
 
     if (secondInd - firstInd > 1) {
-      const digit = Math.floor(Math.random() * secondInd + firstInd + 1);
+      const digit = generateDigit(firstInd, secondInd);
       newPos.push(digit);
       return newPos;
     } else if (secondInd - firstInd === 1) {
@@ -121,16 +120,19 @@ const CRDT: React.FC = ({ children }) => {
     let ch = pos.ch;
     let line = pos.line;
 
-    const countOflines = charsRef.current.length;
+    // const countOflines = charsRef.current.length;
     const lengthOfLine =
       (charsRef.current[line] && charsRef.current[line].length) || 0;
 
-    if (line === countOflines - 1 && lengthOfLine === ch) {
-      return [];
-    } else if (line < countOflines - 1 && ch === lengthOfLine) {
+    // check last symbol on this line and its new symbol in end of string
+    if (ch === lengthOfLine && charsRef.current[line + 1]) {
       line += 1;
       ch = 0;
-    } else if (line > countOflines - 1 && ch === 0) {
+    } else if (
+      (ch === lengthOfLine && !charsRef.current[line + 1]) ||
+      !charsRef.current[line] ||
+      (charsRef.current[line] && ch === lengthOfLine)
+    ) {
       return [];
     }
 
@@ -167,83 +169,86 @@ const CRDT: React.FC = ({ children }) => {
   };
 
   const findPositionChar = (char: Char) => {
-    const line = findLine(char);
-    const ch = findIndexForChar(char, line);
+    let line = findLine(char);
+    let ch = findIndexForChar(char, line);
 
+    if (
+      charsRef.current[line] &&
+      charsRef.current[line][ch - 1] &&
+      charsRef.current[line][ch - 1].char === "\n"
+    ) {
+      line += 1;
+      ch = 0;
+    }
     return { line, ch } as EditorPosition;
   };
 
   const findLine = (char: Char) => {
-    console.log("TEST findLine", char, charsRef.current);
-    const target = char.position[0];
-
     let leftIndex = 0;
     let rightIndex = charsRef.current.length - 1;
 
-    if (charsRef.current.length === 1) {
+    if (charsRef.current.length === 1 || charsRef.current.length === 0) {
       return 0;
     }
 
-    while (leftIndex <= rightIndex) {
+    if (
+      compareChars(
+        char,
+        charsRef.current[charsRef.current.length - 1][
+          charsRef.current[charsRef.current.length - 1].length - 1
+        ]
+      ) === 1
+    ) {
+      return charsRef.current.length - 1;
+    }
+
+    while (leftIndex + 1 < rightIndex) {
       const midLine = Math.floor((rightIndex - leftIndex) / 2) + leftIndex;
 
-      if (
-        charsRef.current[midLine][0].position[0] <= target &&
-        target <=
-          charsRef.current[midLine][charsRef.current[midLine].length - 1]
-            .position[0]
-      ) {
+      const resStart = compareChars(char, charsRef.current[midLine][0]);
+
+      if (resStart === 0) {
         return midLine;
-      } else if (charsRef.current[midLine][0].position[0] >= target) {
+      } else if (resStart < 0) {
         rightIndex = midLine;
-      } else {
-        leftIndex = rightIndex;
+      } else if (resStart > 0) {
+        leftIndex = midLine;
       }
     }
-    return -1;
+
+    if (compareChars(char, charsRef.current[rightIndex][0]) === 1) {
+      return rightIndex;
+    } else {
+      return leftIndex;
+    }
   };
 
   const findCharInLine = (char: Char, lineId: number) => {
-    console.log(
-      "TEST findCharInLine",
-      char,
-      lineId,
-      charsRef.current,
-      charsRef.current[lineId]
-    );
     const line = charsRef.current[lineId];
 
     let leftIndex = 0;
     let rightIndex = line.length - 1;
 
-    while (leftIndex <= rightIndex) {
-      console.log("TEST findCharInLine 1", leftIndex, rightIndex);
+    while (leftIndex + 1 < rightIndex) {
       const midChar = Math.floor((rightIndex - leftIndex) / 2) + leftIndex;
 
-      for (let deep = 0; deep < line[midChar].position.length; deep++) {
-        console.log(
-          "TEST findCharInLine 2",
-          midChar,
-          deep,
-          line[midChar].position[deep],
-          char.position[deep]
-        );
-        const res = compareChars(char, line[midChar]);
-        console.log("TEST findCharInLine 3", res, midChar);
-        if (res === -1) {
-          rightIndex = midChar;
-        } else if (res === 1) {
-          leftIndex = midChar;
-        } else {
-          return midChar;
-        }
+      const res = compareChars(char, line[midChar]);
+      if (res === -1) {
+        rightIndex = midChar;
+      } else if (res === 1) {
+        leftIndex = midChar;
+      } else {
+        return midChar;
       }
     }
-    return -1;
+    if (compareChars(char, line[leftIndex]) === 0) {
+      return leftIndex;
+    } else {
+      return rightIndex;
+    }
   };
 
   const findIndexForChar = (char: Char, lineId: number) => {
-    console.log("TEST findIndexForChar 1", char, lineId);
     const line = charsRef.current[lineId];
 
     if (line.length === 0) {
@@ -259,12 +264,10 @@ const CRDT: React.FC = ({ children }) => {
       return line.length;
     }
 
-    while (leftIndex <= rightIndex) {
-      console.log("TEST findIndexForChar 2", leftIndex, rightIndex);
+    while (leftIndex + 1 < rightIndex) {
       const midChar = Math.floor((rightIndex - leftIndex) / 2) + leftIndex;
 
       const res = compareChars(char, line[midChar]);
-      console.log("TEST findIndexForChar 3", res, midChar);
       if (res === -1) {
         rightIndex = midChar;
       } else if (res === 1) {
@@ -272,11 +275,8 @@ const CRDT: React.FC = ({ children }) => {
       } else {
         return midChar;
       }
-      if (leftIndex === rightIndex) {
-        break;
-      }
     }
-    console.log(char, line[leftIndex], line, leftIndex, rightIndex);
+
     if (compareChars(char, line[leftIndex]) === 0) {
       return leftIndex;
     } else {
@@ -287,12 +287,31 @@ const CRDT: React.FC = ({ children }) => {
   const findPosition = (char: Char) => {
     const line = findLine(char);
     const ch = findCharInLine(char, line);
-
     return { line, ch };
   };
 
   const updateText = () => {
     setText((state) => getText());
+  };
+
+  const deleteChar = (posStart: EditorPosition, posEnd: EditorPosition) => {
+    let char;
+    if (posEnd.line !== posStart.line) {
+      const chars = charsRef.current[posEnd.line];
+
+      char = charsRef.current[posStart.line].splice(posStart.ch, 1)[0];
+      charsRef.current[posStart.line] =
+        charsRef.current[posStart.line].concat(chars);
+      charsRef.current.splice(posEnd.line, 1);
+    } else if (posEnd.line === 0 && posEnd.ch === 0) {
+      console.log("deleteChar nothing", posStart, posEnd);
+      return;
+    } else {
+      char = charsRef.current[posStart.line].splice(posStart.ch, 1)[0];
+    }
+
+    updateText();
+    return char;
   };
 
   const handleLocalInsert = (value: string[], pos: EditorPosition) => {
@@ -311,39 +330,38 @@ const CRDT: React.FC = ({ children }) => {
     posStart: EditorPosition,
     posEnd: EditorPosition
   ) => {
-    console.log('handleLocalDelete ', posStart, posEnd)
-    let char;
-    if (posEnd.line !== posStart.line) {
-      const chars = charsRef.current[posEnd.line];
-      charsRef.current[posStart.line].splice(posStart.ch, 1);
-      charsRef.current[posStart.line].concat(chars);
-    } else if (posStart.line === 0 && posStart.ch === 0) {
-      console.log('handleLocalDelete nothing', posStart, posEnd)
-      return;
-    } else {
-      char = charsRef.current[posStart.line].splice(posStart.ch, 1)[0];
-    }
-    console.log('handleLocalDelete delete', char)
-    charsRef.current = charsRef.current.filter((line) => line.length !== 0);
-    updateText();
+    console.log("handleLocalDelete ", posStart, posEnd);
+    const char = deleteChar(posStart, posEnd);
     socket.current?.emit("delete-char", char);
   };
 
   const handleRemoteInsert = (char: Char) => {
-    console.log('handleRemoteInsert', char)
+    console.log("handleRemoteInsert", char);
+    if (char === null) return;
     const pos = findPositionChar(char);
-    console.log('handleRemoteInsert pos', pos)
+    console.log("handleRemoteInsert pos", pos);
     insertChar(char, pos);
     updateText();
     return undefined;
   };
 
   const handleRemoteDelete = (char: Char) => {
-    console.log('handleRemoteDelete', char)
+    console.log("handleRemoteDelete", char);
+    if (char === null) return;
     const pos = findPosition(char);
-    console.log('handleRemoteDelete pos', pos)
-    handleLocalDelete(pos, { line: pos.line, ch: pos.ch + 1 });
-    updateText();
+    const pos2: EditorPosition = {
+      line: pos.line,
+      ch: pos.ch + 1,
+    };
+    if (
+      charsRef.current[pos.line + 1] &&
+      charsRef.current[pos.line].length - 1 === pos.ch
+    ) {
+      pos2.line = pos.line + 1;
+      pos2.ch = 0;
+    }
+    console.log("handleRemoteDelete pos", pos, pos2);
+    deleteChar(pos, pos2);
   };
 
   const getText = () => {
