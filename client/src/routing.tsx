@@ -1,16 +1,15 @@
 import React from "react";
 import { Route, Switch } from "react-router-dom";
 import Main from "./page/main/main";
-import Session from "./page/session/session";
+import CRDT from "./provider/crdt/crdt";
 
-const Routing = () => {
+const Routing: React.FC = () => {
   return (
     <Switch>
-      <Route path="/session/:sessionId">
-        <Session />
-      </Route>
       <Route path="/">
-        <Main />
+        <CRDT>
+          <Main />
+        </CRDT>
       </Route>
     </Switch>
   );
