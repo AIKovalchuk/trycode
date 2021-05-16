@@ -22,6 +22,14 @@ app.use("/api", SessionRouter);
 io.on("connect", (socket: Socket) => {
     console.log("New connection");
 
+    socket.on("joinSession", ({ username, room }) => {
+        socket.join(room);
+
+        socket.broadcast
+            .to(room)
+            .emit("newUser", `${username} has joined to session`);
+    });
+
     socket.on("insert-char", async (char) => {
         try {
             console.log("insert-char", char);

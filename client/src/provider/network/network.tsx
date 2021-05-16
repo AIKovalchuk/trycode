@@ -1,18 +1,30 @@
 import React from "react";
-
+import { io, Socket } from "socket.io-client";
 export interface NetworkController {
-  send: () => void;
+  socket: Socket | undefined;
 }
 
-const NetworkContext = React.createContext<NetworkController>({
-  send: () => undefined,
+export const NetworkContext = React.createContext<NetworkController>({
+  socket: undefined,
 });
 
+export const socket = io("http://localhost:8080");
+
 const Network: React.FC = ({ children }) => {
+  // const socket = React.useRef<Socket>();
+
+  // React.useEffect(() => {
+  //   socket.current = io("http://localhost:8080");
+
+  //   return () => {
+  //     socket.current?.disconnect();
+  //   };
+  // }, []);
+
   return (
     <NetworkContext.Provider
       value={{
-        send: () => undefined,
+        socket,
       }}
     >
       {children}

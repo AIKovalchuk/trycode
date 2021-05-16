@@ -7,7 +7,7 @@ import "codemirror/mode/javascript/javascript";
 import { Controlled as CodeMirror } from "react-codemirror2";
 import { CRDTContext } from "../../provider/crdt/crdt";
 
-import "./main.scss";
+import "./editor.scss";
 import { EditorPosition } from "../../provider/crdt/interface";
 
 const Main: React.FC = () => {

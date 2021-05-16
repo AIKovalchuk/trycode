@@ -1,7 +1,8 @@
 import React from "react";
-import Main from "../../page/main/main";
+import Main from "../../page/editor/editor";
 import { Char, EditorPosition } from "./interface";
 import { io, Socket } from "socket.io-client";
+import { NetworkContext } from "../network/network";
 
 interface CRDTController {
   handleLocalInsert: (value: string[], pos: EditorPosition) => Char;
@@ -24,25 +25,8 @@ export const CRDTContext = React.createContext<CRDTController>({
 const CRDT: React.FC = ({ children }) => {
   const charsRef = React.useRef<Char[][]>([[]]);
   const [text, setText] = React.useState("");
-  const socket = React.useRef<Socket>();
-
-  React.useEffect(() => {
-    socket.current = io("http://localhost:8080");
-
-    socket.current.on("remote-insert", (char: Char) => {
-      console.log("remote-insert", char);
-      handleRemoteInsert(char);
-    });
-
-    socket.current.on("remote-delete", (char: Char) => {
-      console.log("remote-delete", char);
-      handleRemoteDelete(char);
-    });
-
-    return () => {
-      socket.current?.disconnect();
-    };
-  }, []);
+  // const socket = React.useRef<Socket>();
+  const { socket } = React.useContext(NetworkContext);
 
   const compareChars = (charA: Char, charB: Char) => {
     const length = Math.min(charA.position.length, charB.position.length);
@@ -322,7 +306,7 @@ const CRDT: React.FC = ({ children }) => {
     const char = generateChar(charInsert, pos);
     insertChar(char, pos);
     updateText();
-    socket.current?.emit("insert-char", char);
+    socket?.emit("insert-char", char);
     return char;
   };
 
@@ -332,10 +316,10 @@ const CRDT: React.FC = ({ children }) => {
   ) => {
     console.log("handleLocalDelete ", posStart, posEnd);
     const char = deleteChar(posStart, posEnd);
-    socket.current?.emit("delete-char", char);
+    socket?.emit("delete-char", char);
   };
 
-  const handleRemoteInsert = (char: Char) => {
+  const handleRemoteInsert = React.useCallback((char: Char) => {
     console.log("handleRemoteInsert", char);
     if (char === null) return;
     const pos = findPositionChar(char);
@@ -343,9 +327,9 @@ const CRDT: React.FC = ({ children }) => {
     insertChar(char, pos);
     updateText();
     return undefined;
-  };
+  }, []);
 
-  const handleRemoteDelete = (char: Char) => {
+  const handleRemoteDelete = React.useCallback((char: Char) => {
     console.log("handleRemoteDelete", char);
     if (char === null) return;
     const pos = findPosition(char);
@@ -362,13 +346,26 @@ const CRDT: React.FC = ({ children }) => {
     }
     console.log("handleRemoteDelete pos", pos, pos2);
     deleteChar(pos, pos2);
-  };
+  }, []);
 
   const getText = () => {
     return charsRef.current
       .map((line) => line.map((ch) => ch.char).join(""))
       .join("");
   };
+
+  React.useEffect(() => {
+    socket?.on("remote-insert", (char: Char) => {
+      console.log("remote-insert", char);
+      handleRemoteInsert(char);
+    });
+
+    socket?.on("remote-delete", (char: Char) => {
+      console.log("remote-delete", char);
+      handleRemoteDelete(char);
+    });
+    console.log(socket);
+  }, [handleRemoteDelete, handleRemoteInsert, socket]);
 
   return (
     <CRDTContext.Provider
