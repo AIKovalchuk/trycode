@@ -1,11 +1,16 @@
-import React from 'react'
-import { BrowserRouter } from 'react-router-dom'
-import Routing from './routing'
+import React from "react";
+import { BrowserRouter } from "react-router-dom";
+import { AuthProvider } from "./provider/auth/Auth";
+import Routing from "./routing";
 
-export default function App() {
-    return (
-        <BrowserRouter>
-            <Routing />
-        </BrowserRouter>
-    )
-}
+const App: React.FC = () => {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <Routing />
+      </AuthProvider>
+    </BrowserRouter>
+  );
+};
+
+export default App;
