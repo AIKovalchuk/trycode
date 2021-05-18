@@ -10,7 +10,7 @@ const Header: React.FC = () => {
     <header>
       {currentUser ? (
         <div>
-          <span>currentUser.email</span>
+          <span>{currentUser.email}</span>
           <button onClick={() => logout()}>Logout</button>
         </div>
       ) : (
