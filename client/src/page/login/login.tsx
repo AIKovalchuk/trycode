@@ -1,4 +1,5 @@
 import React from "react";
+import { Form, Button, Card, Row, Col, Alert } from "react-bootstrap";
 import { Link, useHistory } from "react-router-dom";
 import { useAuth } from "../../provider/auth/Auth";
 
@@ -31,23 +32,30 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div>
-      {error && "Error: " + error}
-      <form onSubmit={handleSubmit}>
-        <label htmlFor="email">Email</label>
-        <input type="email" name="email" id="email" required />
-        <label htmlFor="password">Password</label>
-        <input type="password" name="password" id="password" required />
+    <Row className="d-flex align-items-center justify-content-center">
+      <Col md="auto">
+        <Card body style={{ width: "18rem" }}>
+          {error && <Alert variant={"warning"}>{error}</Alert>}
+          <Form onSubmit={handleSubmit}>
+            <Form.Group controlId="email">
+              <Form.Label>Email address</Form.Label>
+              <Form.Control type="email" placeholder="Enter email" />
+            </Form.Group>
 
-        <button disabled={loading} type="submit">
-          Log In
-        </button>
-      </form>
-
-      <div>
-        Need an account? <Link to="/signup">Sign Up</Link>
-      </div>
-    </div>
+            <Form.Group controlId="password">
+              <Form.Label>Password</Form.Label>
+              <Form.Control type="password" placeholder="Password" />
+            </Form.Group>
+            <Button variant="primary" type="submit">
+              Log In
+            </Button>
+          </Form>
+        </Card>
+        <div className="w-100 text-center mt-2">
+          Need an account? <Link to="/signup">Sign Up</Link>
+        </div>
+      </Col>
+    </Row>
   );
 };
 

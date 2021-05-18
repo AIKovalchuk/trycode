@@ -8,21 +8,17 @@ import CRDT from "./provider/crdt/crdt";
 
 const Routing: React.FC = () => {
   return (
-    <Page>
-      <Switch>
-        <Route path="/login">
-          <Login />
-        </Route>
-        <Route path="/signup">
-          <Signup />
-        </Route>
-        <Route path="/">
+    <Switch>
+      <Page>
+        <Route component={Login} path="/login" />
+        <Route component={Signup} path="/signup" />
+        <Route exact path="/">
           <CRDT>
             <Main />
           </CRDT>
         </Route>
-      </Switch>
-    </Page>
+      </Page>
+    </Switch>
   );
 };
 
