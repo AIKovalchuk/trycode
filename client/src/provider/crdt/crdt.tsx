@@ -1,7 +1,5 @@
 import React from "react";
-import Main from "../../page/editor/editor";
 import { Char, EditorPosition } from "./interface";
-import { io, Socket } from "socket.io-client";
 import { NetworkContext } from "../network/network";
 
 interface CRDTController {
@@ -307,6 +305,7 @@ const CRDT: React.FC = ({ children }) => {
     insertChar(char, pos);
     updateText();
     socket?.emit("insert-char", char);
+    console.log(socket);
     return char;
   };
 

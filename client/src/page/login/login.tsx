@@ -24,7 +24,7 @@ const Login: React.FC = () => {
       setLoading(true);
       await login(email, password);
       history.push("/");
-    } catch {
+    } catch (e) {
       setError("Failed to log in");
     }
 

@@ -1,11 +1,11 @@
 import React from "react";
 import { Route, Switch } from "react-router-dom";
-import Main from "./page/editor/editor";
+import Edditor from "./page/editor/editor";
+import Main from "./page/main/main";
 import Login from "./page/login/login";
 import { Page } from "./page/page";
 import Signup from "./page/signup/signup";
-import CRDT from "./provider/crdt/crdt";
-import Network from "./provider/network/network";
+import CreateSession from "./page/createSession/createSession";
 
 const Routing: React.FC = () => {
   return (
@@ -13,11 +13,9 @@ const Routing: React.FC = () => {
       <Page>
         <Route component={Login} path="/login" />
         <Route component={Signup} path="/signup" />
-        <Route exact path="/">
-          <CRDT>
-            <Main />
-          </CRDT>
-        </Route>
+        <Route component={CreateSession} path="/createSession" />
+        <Route component={Edditor} path="/session/:id" />
+        <Route exact component={Main} path="/" />
       </Page>
     </Switch>
   );

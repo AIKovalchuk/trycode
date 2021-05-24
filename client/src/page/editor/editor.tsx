@@ -5,12 +5,14 @@ import "codemirror/theme/material.css";
 import "codemirror/mode/xml/xml";
 import "codemirror/mode/javascript/javascript";
 import { Controlled as CodeMirror } from "react-codemirror2";
-import { CRDTContext } from "../../provider/crdt/crdt";
+import CRDT, { CRDTContext } from "../../provider/crdt/crdt";
 
 import "./editor.scss";
 import { EditorPosition } from "../../provider/crdt/interface";
+import { RouteComponentProps } from "react-router";
+import Network from "../../provider/network/network";
 
-const Main: React.FC = () => {
+const Edditor$: React.FC = () => {
   // const [text, setText] = React.useState<string>("");
 
   const { handleLocalInsert, handleLocalDelete, text } =
@@ -47,4 +49,22 @@ const Main: React.FC = () => {
   );
 };
 
-export default Main;
+interface EdditorProps {
+  id: string;
+}
+
+const Edditor: React.FunctionComponent<RouteComponentProps<EdditorProps>> = ({
+  match: {
+    params: { id },
+  },
+}) => {
+  return (
+    <Network id={id}>
+      <CRDT>
+        <Edditor$ />
+      </CRDT>
+    </Network>
+  );
+};
+
+export default Edditor;
