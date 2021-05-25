@@ -13,33 +13,31 @@ export const NetworkContext = React.createContext<NetworkController>({
   socket: undefined,
 });
 
-// export const socket = (title: string, language: string) => React.useMemo<Socket | undefined>(() => io("http://localhost:8080", {transports:["websocket"], query:{title, language}}),[title, language]);
 interface Props {
   id: string;
 }
 
 const Network: React.FC<Props> = ({ id, children }) => {
-  const socket = io("http://localhost:8080", {
-    transports: ["websocket"],
-    query: { id },
-  });
-  // const socket = React.useRef<Socket>();
+  const socket = React.useRef<Socket>();
+  const [wsState, updateWsState] = React.useState(false);
 
-  // React.useEffect(() => {
-  //   socket.current = io("http://localhost:8080", {
-  //     transports: ["websocket"],
-  //     query: { id },
-  //   });
+  React.useEffect(() => {
+    socket.current = io("http://localhost:8080", {
+      transports: ["websocket"],
+      query: { id },
+    });
+    updateWsState(true);
 
-  //   return () => {
-  //     socket.current?.disconnect();
-  //   };
-  // }, [socket.current]);
+    return () => {
+      socket.current?.disconnect();
+      updateWsState(false);
+    };
+  }, [id]);
 
   return (
     <NetworkContext.Provider
       value={{
-        socket: socket,
+        socket: socket.current,
       }}
     >
       {socket ? children : "Loading..."}

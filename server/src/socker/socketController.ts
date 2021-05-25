@@ -36,6 +36,10 @@ const SocketApp = (server: http.Server) => {
 
         socket.on("disconnect", () => {
             console.log("Disconnected");
+            const clients = io.sockets.adapter.rooms.get(id);
+            if (!clients?.size) {
+                console.log("No more in room", id);
+            }
         });
     });
 };
