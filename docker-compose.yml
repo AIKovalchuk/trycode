@@ -4,7 +4,28 @@ services:
     build: ./client
     ports:
       - "8000:8000"
+    networks:
+      - net-app
   server:
     build: ./server
     ports:
       - "8080:8080"
+    external_links:
+      - mongo
+    networks:
+      - net-app
+  mongodb:
+    container_name: mongo
+    image: mongo
+    ports:
+      - "27017:27017"
+    networks:
+      - net-app
+    volumes:
+      - data-volume:/data/db
+
+volumes:
+  data-volume:
+networks:
+  net-app:
+    driver: bridge

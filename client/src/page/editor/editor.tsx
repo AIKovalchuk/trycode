@@ -11,6 +11,7 @@ import "./editor.scss";
 import { EditorPosition } from "../../provider/crdt/interface";
 import { RouteComponentProps } from "react-router";
 import Network from "../../provider/network/network";
+import { Users } from "./users";
 
 const Edditor$: React.FC = () => {
   // const [text, setText] = React.useState<string>("");
@@ -44,7 +45,18 @@ const Edditor$: React.FC = () => {
 
   return (
     <div className="editor">
-      <CodeMirror onBeforeChange={onBeforeChange} value={text} />
+      <CodeMirror
+        onBeforeChange={onBeforeChange}
+        value={text}
+        className="code-mirror-wrapper"
+        options={{
+          lineWrapping: true,
+          theme: "material",
+          mode: "xml",
+          lineNumbers: true,
+        }}
+      />
+      <Users />
     </div>
   );
 };

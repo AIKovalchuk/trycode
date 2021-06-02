@@ -3,8 +3,8 @@ import Session from "../services/Session";
 
 const createSession = async (req: Request, res: Response) => {
     try {
-        const { title, language } = req.body;
-        const session = await Session.createSession(title, language);
+        const { title, type } = req.body;
+        const session = await Session.createSession(title, type);
         res.send({ id: session.id });
     } catch (error) {
         res.status(500);

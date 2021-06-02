@@ -19,7 +19,7 @@ interface Props {
 
 const Network: React.FC<Props> = ({ id, children }) => {
   const socket = React.useRef<Socket>();
-  const [wsState, updateWsState] = React.useState(false);
+  const [, updateWsState] = React.useState(false);
 
   React.useEffect(() => {
     socket.current = io("http://localhost:8080", {
@@ -40,7 +40,7 @@ const Network: React.FC<Props> = ({ id, children }) => {
         socket: socket.current,
       }}
     >
-      {socket ? children : "Loading..."}
+      {children}
     </NetworkContext.Provider>
   );
 };

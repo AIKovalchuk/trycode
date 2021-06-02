@@ -1,26 +1,27 @@
 import { v4 as uuidv4 } from "uuid";
+import Session, { ISession } from "../models/SessionModel";
 
-interface Session {
-    id: string;
-    owner?: string;
-    text: string;
-}
+const sessionsCollection: ISession[] = [];
 
-const sessionsCollection: Session[] = [];
-
-const createSession = async (title: string, language: string) => {
+const createSession = async (title: string, type: string) => {
     const id = uuidv4();
-    const session: Session = {
-        id,
-        text: "",
-    };
+    const session = new Session({
+        _id: id,
+        title,
+        type,
+        content: [[]],
+    });
     sessionsCollection.push(session);
     return session;
 };
 
 const getSessionById = async (id: string) => {
-    const session = sessionsCollection.find((s) => s.id === id);
-    return session;
+    const session1 = sessionsCollection.find((s) => s._id === id);
+    let session2 = null;
+    if (!session1) {
+        session2 = await Session.findById(id);
+    }
+    return session1 ? session1 : session2;
 };
 
 export default { createSession, getSessionById };

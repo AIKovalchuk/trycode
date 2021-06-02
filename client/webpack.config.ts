@@ -66,6 +66,11 @@ const config: webpack.Configuration = {
       template: "./src/index.html",
     }),
   ],
+  externals: {
+    ConfigData: {
+      serverURL: "https://trycode-server.herokuapp.com/",
+    },
+  },
 };
 
 export default config;

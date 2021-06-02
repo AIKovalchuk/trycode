@@ -1,7 +1,12 @@
 import { Server, Socket } from "socket.io";
 import http from "http";
-// import Session from "./sessionManager";
-import Session from "../services/Session";
+import SessionService from "../services/Session";
+import { getRoomUsers, userJoin } from "../services/User";
+
+interface SocketParams {
+    id: string;
+    username: string | undefined;
+}
 
 const SocketApp = (server: http.Server) => {
     const io = new Server(server, {
@@ -13,17 +18,29 @@ const SocketApp = (server: http.Server) => {
 
     console.log("Socket up");
 
-    const standartNamespace = io.of("/");
-
     io.on("connection", async (socket: Socket) => {
         console.log("New connection");
         // take param
-        const id = socket.handshake.query.id as string;
+        const id = socket.handshake.query.id as string | null;
         console.log(id);
-        const session = await Session.getSessionById(id);
-        console.log(session);
+        if (id === null) {
+            return;
+        }
+        const session = await SessionService.getSessionById(id);
+        console.log("session", session);
+        if (!session) {
+            console.log("ERROR: session not exit");
+            return;
+        }
+
+        let username = socket.handshake.query.username as string | null;
+        if (username === null) {
+            username = "Anonymus " + getRoomUsers(id).length;
+        }
+        const user = userJoin(socket.id, username, id);
+        socket.to(id).emit("user-join", user);
+
         socket.join(id);
-        // const session = new Session({ io: standartNamespace, socket, roomId: id });
         socket.on("insert-char", async (char) => {
             console.log("insert-char", id, char);
             socket.to(id).emit("remote-insert", char);
@@ -36,9 +53,11 @@ const SocketApp = (server: http.Server) => {
 
         socket.on("disconnect", () => {
             console.log("Disconnected");
+            socket.to(id).emit("user-leave", user);
             const clients = io.sockets.adapter.rooms.get(id);
             if (!clients?.size) {
                 console.log("No more in room", id);
+                session.save();
             }
         });
     });
