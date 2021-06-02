@@ -2,6 +2,7 @@ import { Server, Socket } from "socket.io";
 import http from "http";
 import SessionService from "../services/Session";
 import { getRoomUsers, userJoin } from "../services/User";
+import CRDT from "../services/CRDT";
 
 interface SocketParams {
     id: string;
@@ -44,11 +45,13 @@ const SocketApp = (server: http.Server) => {
         socket.on("insert-char", async (char) => {
             console.log("insert-char", id, char);
             socket.to(id).emit("remote-insert", char);
+            session.content = CRDT.handleInsert(char, session.content);
         });
 
         socket.on("delete-char", async (char) => {
             console.log("delete-char", id, char);
             socket.to(id).emit("remote-delete", char);
+            session.content = CRDT.handleDelete(char, session.content);
         });
 
         socket.on("disconnect", () => {

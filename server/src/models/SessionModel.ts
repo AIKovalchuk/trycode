@@ -5,6 +5,11 @@ export interface Char {
     position: number[];
 }
 
+export interface EditorPosition {
+    line: number;
+    ch: number;
+}
+
 export interface ISession extends Document {
     uuid: string;
     title: string;
