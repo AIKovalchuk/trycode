@@ -1,7 +1,7 @@
 import axios from "axios";
 
 export interface Session {
-  id: string;
+  uuid: string;
 }
 
 export const createSession = async (title: string, lang: string) => {

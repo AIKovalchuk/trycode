@@ -22,20 +22,20 @@ const SocketApp = (server: http.Server) => {
         console.log("New connection");
         // take param
         const id = socket.handshake.query.id as string | null;
-        console.log(id);
+        console.log("ID", id);
         if (id === null) {
             return;
         }
         const session = await SessionService.getSessionById(id);
         console.log("session", session);
         if (!session) {
-            console.log("ERROR: session not exit");
+            console.log("ERROR: session not exit", SessionService.getAll());
             return;
         }
 
         let username = socket.handshake.query.username as string | null;
-        if (username === null) {
-            username = "Anonymus " + getRoomUsers(id).length;
+        if (!username || username === "") {
+            username = "Аноним " + getRoomUsers(id).length + 1;
         }
         const user = userJoin(socket.id, username, id);
         socket.to(id).emit("user-join", user);

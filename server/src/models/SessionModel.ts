@@ -6,7 +6,7 @@ export interface Char {
 }
 
 export interface ISession extends Document {
-    _id: string;
+    uuid: string;
     title: string;
     type: string;
     content: Char[][];
@@ -15,6 +15,10 @@ export interface ISession extends Document {
 const Session: Schema = new Schema({
     title: {
         type: String,
+    },
+    uuid: {
+        type: String,
+        required: true,
     },
     type: {
         type: String,

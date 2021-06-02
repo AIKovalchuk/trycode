@@ -6,8 +6,8 @@ export interface User {
 
 const users: User[] = [];
 
-export const userJoin = (id: string, username: string | null, room: string) => {
-    const user = { id, username: "qwe", room };
+export const userJoin = (id: string, username: string, room: string) => {
+    const user = { id, username, room };
 
     users.push(user);
 

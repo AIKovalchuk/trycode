@@ -5,7 +5,7 @@ const createSession = async (req: Request, res: Response) => {
     try {
         const { title, type } = req.body;
         const session = await Session.createSession(title, type);
-        res.send({ id: session.id });
+        res.send({ uuid: session.uuid });
     } catch (error) {
         res.status(500);
     }

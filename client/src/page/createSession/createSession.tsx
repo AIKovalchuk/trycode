@@ -18,7 +18,7 @@ const CreateSession: React.FC = () => {
     try {
       setError("");
       const uuid = await createSession(text, language);
-      history.push({ pathname: "/session/" + uuid?.id });
+      history.push({ pathname: "/session/" + uuid?.uuid });
     } catch (e) {
       setError("Failed to log in");
     }
