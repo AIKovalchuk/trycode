@@ -11,4 +11,14 @@ const createSession = async (req: Request, res: Response) => {
     }
 };
 
-export { createSession };
+const getSession = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const session = await Session.getSessionById(id);
+        res.send(session);
+    } catch (error) {
+        res.status(500);
+    }
+};
+
+export { createSession, getSession };

@@ -1,6 +1,7 @@
 import React from "react";
 import { Char, EditorPosition } from "./interface";
 import { NetworkContext } from "../network/network";
+import { SessionFull } from "../../service/Session";
 
 interface CRDTController {
   handleLocalInsert: (value: string[], pos: EditorPosition) => Char;
@@ -20,8 +21,12 @@ export const CRDTContext = React.createContext<CRDTController>({
   text: "",
 });
 
-const CRDT: React.FC = ({ children }) => {
-  const charsRef = React.useRef<Char[][]>([[]]);
+interface Props {
+  session: SessionFull;
+}
+
+const CRDT: React.FC<Props> = ({ session, children }) => {
+  const charsRef = React.useRef<Char[][]>(session.content || [[]]);
   const [text, setText] = React.useState("");
   // const socket = React.useRef<Socket>();
   const { socket } = React.useContext(NetworkContext);
@@ -363,7 +368,8 @@ const CRDT: React.FC = ({ children }) => {
       console.log("remote-delete", char);
       handleRemoteDelete(char);
     });
-    console.log(socket);
+
+    updateText();
   }, [handleRemoteDelete, handleRemoteInsert, socket]);
 
   return (

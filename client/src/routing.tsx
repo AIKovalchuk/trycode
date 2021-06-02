@@ -1,6 +1,6 @@
 import React from "react";
 import { Route, Switch } from "react-router-dom";
-import Edditor from "./page/editor/editor";
+import EditorPage from "./page/editor/editorPage";
 import Main from "./page/main/main";
 import Login from "./page/login/login";
 import { Page } from "./page/page";
@@ -14,7 +14,7 @@ const Routing: React.FC = () => {
         <Route component={Login} path="/login" />
         <Route component={Signup} path="/signup" />
         <Route component={CreateSession} path="/createSession" />
-        <Route component={Edditor} path="/session/:id" />
+        <Route component={EditorPage} path="/session/:id" />
         <Route exact component={Main} path="/" />
       </Page>
     </Switch>

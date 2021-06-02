@@ -6,16 +6,17 @@ import "codemirror/mode/xml/xml";
 import "codemirror/mode/javascript/javascript";
 import { Controlled as CodeMirror } from "react-codemirror2";
 import CRDT, { CRDTContext } from "../../provider/crdt/crdt";
+import { EditorPosition } from "../../provider/crdt/interface";
+import { Users } from "./users";
+import { SessionFull } from "../../service/Session";
 
 import "./editor.scss";
-import { EditorPosition } from "../../provider/crdt/interface";
-import { RouteComponentProps } from "react-router";
-import Network from "../../provider/network/network";
-import { Users } from "./users";
 
-const Edditor$: React.FC = () => {
-  // const [text, setText] = React.useState<string>("");
+interface Props {
+  session: SessionFull;
+}
 
+const Edditor: React.FC<Props> = ({ session }) => {
   const { handleLocalInsert, handleLocalDelete, text } =
     React.useContext(CRDTContext);
 
@@ -52,30 +53,12 @@ const Edditor$: React.FC = () => {
         options={{
           lineWrapping: true,
           theme: "material",
-          mode: "xml",
+          mode: session.type,
           lineNumbers: true,
         }}
       />
       <Users />
     </div>
-  );
-};
-
-interface EdditorProps {
-  id: string;
-}
-
-const Edditor: React.FunctionComponent<RouteComponentProps<EdditorProps>> = ({
-  match: {
-    params: { id },
-  },
-}) => {
-  return (
-    <Network id={id}>
-      <CRDT>
-        <Edditor$ />
-      </CRDT>
-    </Network>
   );
 };
 
