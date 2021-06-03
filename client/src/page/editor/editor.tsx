@@ -53,7 +53,7 @@ const Edditor: React.FC<Props> = ({ session }) => {
         options={{
           lineWrapping: true,
           theme: "material",
-          mode: session.type,
+          mode: session.lang,
           lineNumbers: true,
         }}
       />

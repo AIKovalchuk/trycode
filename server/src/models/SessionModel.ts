@@ -13,7 +13,7 @@ export interface EditorPosition {
 export interface ISession extends Document {
     uuid: string;
     title: string;
-    type: string;
+    lang: string;
     content: Char[][];
 }
 
@@ -25,7 +25,7 @@ const Session: Schema = new Schema({
         type: String,
         required: true,
     },
-    type: {
+    lang: {
         type: String,
         require: true,
     },

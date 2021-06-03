@@ -7,7 +7,7 @@ export interface Session {
 
 export interface SessionFull extends Session {
   title: string;
-  type: string;
+  lang: string;
   content: Char[][];
 }
 

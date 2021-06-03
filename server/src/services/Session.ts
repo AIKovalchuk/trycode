@@ -3,12 +3,12 @@ import Session, { ISession } from "../models/SessionModel";
 
 const sessionsCollection: ISession[] = [];
 
-const createSession = async (title: string, type: string) => {
+const createSession = async (title: string, lang: string) => {
     const id = uuidv4();
     const session = new Session({
         uuid: id,
         title,
-        type,
+        lang,
         content: [[]],
     });
     sessionsCollection.push(session);
