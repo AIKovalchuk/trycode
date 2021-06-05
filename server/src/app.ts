@@ -4,6 +4,7 @@ import cors from "cors";
 import SessionRouter from "./routes/session";
 import SocketApp from "./socker/socketController";
 import mongoose from "mongoose";
+import UsersRouter from "./routes/users";
 
 const app = express();
 const server = new http.Server(app);
@@ -14,6 +15,7 @@ app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use("/api", SessionRouter);
+app.use("/api", UsersRouter);
 
 app.get("/", (req, res) => res.send("Hello, world"));
 

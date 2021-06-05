@@ -57,7 +57,7 @@ const Edditor: React.FC<Props> = ({ session }) => {
           lineNumbers: true,
         }}
       />
-      <Users />
+      <Users session={session} />
     </div>
   );
 };

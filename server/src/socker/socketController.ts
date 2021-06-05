@@ -39,7 +39,7 @@ const SocketApp = (server: http.Server) => {
             username = "Аноним " + getRoomUsers(id).length + 1;
         }
         const user = userJoin(socket.id, username, id);
-        socket.to(id).emit("user-join", user);
+        socket.in(id).emit("user-join", user);
 
         socket.join(id);
         socket.on("insert-char", async (char) => {
