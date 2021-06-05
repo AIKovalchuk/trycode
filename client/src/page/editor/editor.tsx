@@ -25,7 +25,6 @@ const Edditor: React.FC<Props> = ({ session }) => {
     data: EditorChange,
     value: string
   ) => {
-    console.log("INPUT", "data: ", data, "value: ", value);
     switch (data.origin) {
       case "+input":
         const pos: EditorPosition = { line: data.from.line, ch: data.from.ch };

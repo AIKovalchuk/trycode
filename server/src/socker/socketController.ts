@@ -1,7 +1,7 @@
 import { Server, Socket } from "socket.io";
 import http from "http";
 import SessionService from "../services/Session";
-import { getRoomUsers, userJoin } from "../services/User";
+import { getRoomUsers, userJoin, userLeave } from "../services/User";
 import CRDT from "../services/CRDT";
 
 interface SocketParams {
@@ -20,42 +20,42 @@ const SocketApp = (server: http.Server) => {
     console.log("Socket up");
 
     io.on("connection", async (socket: Socket) => {
-        console.log("New connection");
+        console.log("NEW CONNECTION", socket.id);
         // take param
         const id = socket.handshake.query.id as string | null;
-        console.log("ID", id);
         if (id === null) {
             return;
         }
         const session = await SessionService.getSessionById(id);
-        console.log("session", session);
         if (!session) {
-            console.log("ERROR: session not exit", SessionService.getAll());
+            console.log("ERROR: session not exit");
             return;
         }
 
         let username = socket.handshake.query.username as string | null;
         if (!username || username === "") {
-            username = "Аноним " + getRoomUsers(id).length + 1;
+            console.log("username", username, socket.id);
+            username = socket.id;
         }
         const user = userJoin(socket.id, username, id);
-        socket.in(id).emit("user-join", user);
-
+        console.log("USER", user);
         socket.join(id);
+        io.in(id).emit("user-join", user);
+        // socket.emit("user-join", user);
+
         socket.on("insert-char", async (char) => {
-            console.log("insert-char", id, char);
             socket.to(id).emit("remote-insert", char);
             session.content = CRDT.handleInsert(char, session.content);
         });
 
         socket.on("delete-char", async (char) => {
-            console.log("delete-char", id, char);
             socket.to(id).emit("remote-delete", char);
             session.content = CRDT.handleDelete(char, session.content);
         });
 
         socket.on("disconnect", () => {
-            console.log("Disconnected");
+            console.log("Disconnected", socket.id);
+            userLeave(socket.id);
             socket.to(id).emit("user-leave", user);
             const clients = io.sockets.adapter.rooms.get(id);
             if (!clients?.size) {

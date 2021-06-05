@@ -14,21 +14,19 @@ export const Users: React.FC<Props> = ({ session }) => {
   const { currentUser } = useAuth();
 
   const handleJoin = (user: User) => {
-    console.log("handleJoin 1", user, users);
-    setUsers([...users, user]);
-    console.log("handleJoin 2", users);
+    setUsers((prev) => [...prev, user]);
   };
 
   const handleLeave = (user: User) => {
-    console.log("handleLeave", user, users);
-    setUsers(users.filter((user$: User) => user$.username !== user.username));
-    console.log("handleLeave 2", users);
+    setUsers((prev) =>
+      prev.filter((user$: User) => user$.username !== user.username)
+    );
   };
 
   const fetchUsers = async () => {
     const users$ = await getAllUsersByRoom(session.uuid);
     if (users$) {
-      setUsers(users$);
+      setUsers((prev) => [...prev, ...users$]);
     }
   };
 
