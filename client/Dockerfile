@@ -1,13 +1,11 @@
-FROM node:14-slim
-
-WORKDIR /usr/src/app
-
-COPY ./package*.json ./
-
+FROM node:14-slim as builder
+WORKDIR /app
+COPY ./package*.json /app/
 RUN npm install
+COPY . /app
+RUN npm run build
 
-COPY . .
-
-EXPOSE 8000
-
-CMD [ "npm", "run", "serve" ]
+FROM nginx:1.16.0-alpine
+COPY --from=builder /app/build /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
