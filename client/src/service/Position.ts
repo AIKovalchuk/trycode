@@ -1,4 +1,4 @@
 export default interface Position {
-  line: number;
-  ch: number;
+    line: number;
+    ch: number;
 }

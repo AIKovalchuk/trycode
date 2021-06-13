@@ -1,9 +1,9 @@
 export interface Char {
-  char: string;
-  position: number[];
+    char: string;
+    position: number[];
 }
 
 export interface EditorPosition {
-  line: number;
-  ch: number;
+    line: number;
+    ch: number;
 }

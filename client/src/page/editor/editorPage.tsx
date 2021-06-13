@@ -1,42 +1,41 @@
-import React from "react";
-import { RouteComponentProps } from "react-router";
-import Network from "../../provider/network/network";
-import CRDT, { CRDTContext } from "../../provider/crdt/crdt";
-import Edditor from "./editor";
-import { getSession, SessionFull } from "../../service/Session";
+import React from 'react';
+import { RouteComponentProps } from 'react-router';
+import Network from '../../provider/network/network';
+import CRDT from '../../provider/crdt/crdt';
+import Edditor from './editor';
+import { getSession, SessionFull } from '../../service/Session';
 
 interface EdditorProps {
-  id: string;
+    id: string;
 }
 
-const EditorPage: React.FunctionComponent<RouteComponentProps<EdditorProps>> =
-  ({
+const EditorPage: React.FunctionComponent<RouteComponentProps<EdditorProps>> = ({
     match: {
-      params: { id },
+        params: { id },
     },
-  }) => {
+}) => {
     const [session, setSession] = React.useState<SessionFull | undefined>();
 
-    const fetchData = async () => {
-      const session = await getSession(id);
-      setSession(session);
-    };
+    const fetchData = React.useCallback(async () => {
+        const session = await getSession(id);
+        setSession(session);
+    }, []);
 
     React.useEffect(() => {
-      fetchData();
-    }, [id]);
+        fetchData();
+    }, [id, fetchData]);
 
     if (!session) {
-      return <div>Loading</div>;
+        return <div>Loading</div>;
     }
 
     return (
-      <Network id={id}>
-        <CRDT session={session}>
-          <Edditor session={session} />
-        </CRDT>
-      </Network>
+        <Network id={id}>
+            <CRDT session={session}>
+                <Edditor session={session} />
+            </CRDT>
+        </Network>
     );
-  };
+};
 
 export default EditorPage;
